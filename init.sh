@@ -64,7 +64,7 @@ check_parameters () {
 
     if [ -z $container_root ];
     then
-        container_root=/mnt/apps_ecloud_1/
+        container_root=/mnt/apps_ecloud_1/containers
     fi
 }
  
