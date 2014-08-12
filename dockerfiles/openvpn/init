@@ -1,0 +1,64 @@
+#!/bin/sh
+
+
+#cp /etc/openvpn /appli
+mkdir /etc/openvpn/easy-rsa/
+cp -r /usr/share/easy-rsa/* /etc/openvpn/easy-rsa/
+cd /etc/openvpn/easy-rsa/
+
+export KEY_COUNTRY="FR"
+export KEY_PROVINCE="06"
+export KEY_CITY="idaoph"
+export KEY_ORG="idaoph.lt"
+export KEY_EMAIL="dtc@idaoph.lt"
+. /etc/openvpn/easy-rsa/vars
+mkdir keys/
+./clean-all
+./build-dh
+./pkitool --initca
+./pkitool --server server
+
+openvpn --genkey --secret keys/ta.key
+
+cp keys/ca.crt keys/ta.key keys/server.crt keys/server.key keys/dh2048.pem /etc/openvpn/
+
+mkdir /etc/openvpn/jail
+
+mkdir /etc/openvpn/clientconf
+
+cat > /etc/openvpn/server.conf << EOF
+mode server
+proto udp
+port 1194
+
+dev tun
+# Cles et certificats
+ca ca.crt
+cert server.crt
+key server.key
+dh dh2048.pem
+tls-auth ta.key 1
+key-direction 0
+cipher AES-256-CBC
+# Reseau
+server 192.168.255.128 255.255.255.128
+push "redirect-gateway def1 bypass-dhcp"
+push "dhcp-option DNS 8.8.8.8"
+push "dhcp-option DNS 8.8.4.4"
+keepalive 10 120
+
+# Securite
+
+persist-key
+persist-tun
+comp-lzo
+
+# Log
+verb 3
+mute 20
+
+status openvpn-status.log
+; log-append /var/log/openvpn.log
+EOF
+
+cp -rvf /etc/openvpn /appli

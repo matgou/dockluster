@@ -1,0 +1,76 @@
+#!/bin/bash
+
+if [ ! -d /appli/nginx ]
+then
+    mv /etc/nginx /appli
+cat > /appli/nginx/sites-available/default << EOF
+
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server ipv6only=on;
+
+        root /appli/public_html;
+        index index.html index.htm;
+
+        # Make site accessible from http://localhost/
+        server_name localhost;
+
+        location / {
+                # First attempt to serve request as file, then
+                # as directory, then fall back to displaying a 404.
+                try_files $uri $uri/ =404;
+                # Uncomment to enable naxsi on this location
+                # include /etc/nginx/naxsi.rules
+        }
+
+        # Only for nginx-naxsi used with nginx-naxsi-ui : process denied requests
+        #location /RequestDenied {
+        #       proxy_pass http://127.0.0.1:8080;
+        #}
+
+        #error_page 404 /404.html;
+
+        # redirect server error pages to the static page /50x.html
+        #
+        #error_page 500 502 503 504 /50x.html;
+        #location = /50x.html {
+        #       root /usr/share/nginx/html;
+        #}
+
+        # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+        #
+        location ~ \.php$ {
+                fastcgi_split_path_info ^(.+\.php)(/.+)$;
+                # NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini
+
+                # With php5-fpm:
+                fastcgi_pass unix:/var/run/php5-fpm.sock;
+                fastcgi_index index.php;
+                include fastcgi_params;
+        }
+
+        # deny access to .htaccess files, if Apache's document root
+        # concurs with nginx's one
+        #
+        location ~ /\.ht {
+                deny all;
+        }
+}
+EOF
+
+fi
+
+rm -rf /etc/nginx
+ln -sv /appli/nginx /etc
+
+if [ -d /appli/php5 ]
+then
+    mv -v /etc/php5/fpm/conf.d/* /appli/php5/fpm/conf.d/
+    mv -v /etc/php5/mods-available/* /appli/php5/mods-available/
+else
+    mv /etc/php5 /appli/
+fi
+rm -rf /etc/php5
+ln -sv /appli/php5 /etc/
+
+mkdir -p /appli/public_html

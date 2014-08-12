@@ -1,0 +1,26 @@
+#!/bin/bash
+
+rm -rf /etc/nginx
+ln -sv /appli/nginx /etc
+
+rm -rf /etc/php5
+ln -sv /appli/php5 /etc/
+
+
+cat > /etc/supervisor/conf.d/nginx.conf << EOF
+[program:nginx]
+command=/usr/sbin/nginx
+directory=/appli/nginx
+autostart=true
+autorestart=true
+EOF
+
+cat > /etc/supervisor/conf.d/php.conf << EOF
+[program:php]
+command=/usr/sbin/php5-fpm -F
+directory=/appli/php5
+autostart=true
+autorestart=true
+EOF
+
+/usr/bin/supervisord -n
