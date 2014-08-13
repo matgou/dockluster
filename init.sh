@@ -20,7 +20,7 @@ log_file=/var/log/$script.log
 # Usage function
 function usage () {
     # TODO - Write the good stuff here...
-    echo "$0 container_name [container_root]"
+    echo "$0 container_name container_tag [container_template] [container_root]"
 }
 # Help function
 function help () {
@@ -62,16 +62,19 @@ check_parameters () {
         exit 1
     fi
 
-    if [ -z $container_root ];
+    if [ -z $template ]
     then
-        container_root=/mnt/apps_ecloud_1/containers
+        template=default
     fi
+
+    container_root=/mnt/apps_ecloud_1/containers
 }
  
 # Parameters management
 container_name=$1
 tagname=$2
-container_root=$3
+template=$3
+container_root=$4
  
 check_parameters
  
@@ -128,6 +131,11 @@ EOF
 #@ Steps : Extraction des scripts standard
 #**************************************************************************
 cd $container_root/$container_name/
-ln -sv $container_root/batch/* $container_root/$container_name/batch
+ln -sv $container_root/../batch/* $container_root/$container_name/batch
+
+#**************************************************************************
+#@ Steps : (Optional) Fetch dockerfile from template
+#**************************************************************************
+cp $container_root/../dockerfiles/$template/* $container_root/$container_name/src/
 #******************************************************************************
 #EOF
